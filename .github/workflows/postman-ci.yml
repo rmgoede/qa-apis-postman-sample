@@ -1,0 +1,28 @@
+name: Postman Tests (Newman)
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+
+jobs:
+  newman:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Install newman
+        run: npm install -g newman
+
+      - name: Run Postman collection
+        run: |
+          newman run "postman/PostmanAPIFundamentasExpert.postman_collection.json" \
+            --reporters cli,junit \
+            --reporter-junit-export "newman-results.xml"
+
