@@ -3,7 +3,13 @@ name: Postman Tests (Newman)
 on:
   push:
     branches: [ "main" ]
+    paths:
+      - 'postman/**'
+      - '.github/workflows/postman-ci.yml'
   pull_request:
+    paths:
+      - 'postman/**'
+      - '.github/workflows/postman-ci.yml'
 
 permissions:
   contents: read
