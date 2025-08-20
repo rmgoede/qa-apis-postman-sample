@@ -53,3 +53,16 @@ jobs:
       - uses: actions/checkout@v4
       - name: Run Newman tests
         run: newman run postman/Postman\ Library\ API\ V2.postman_collection.json
+```
+---
+
+## 📊 Reports
+
+- **Latest HTML Report:** [👉 View Report](https://rmgoede.github.io/qa-apis-postman-sample/report.html)  
+- **Artifacts (per workflow run):**
+  - `report.html` (HTML dashboard)  
+  - `results.xml` (JUnit format, CI-friendly)  
+
+📸 **Example Report Screenshot** (click to open the live report):
+
+[![Newman Report Screenshot](docs/report-screenshot.png)](https://rmgoede.github.io/qa-apis-postman-sample/report.html)
