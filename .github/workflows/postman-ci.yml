@@ -37,12 +37,12 @@ jobs:
         run: |
           mkdir -p newman
           newman run "postman/Postman Library API V2.postman_collection.json" \
-            --env-var baseUrl=https://postman-library-api.glitch.me \
+            --env-var baseUrl=https://library-api.postmanlabs.com \
             --reporters cli,htmlextra,junit \
             --reporter-htmlextra-export "newman/report.html" \
             --reporter-junit-export "newman/results.xml"
 
-      # 1) normal downloadable artifact (zip with report.html + results.xml)
+      # Downloadable CI artifact (HTML + JUnit)
       - name: Upload CI artifacts
         uses: actions/upload-artifact@v4
         with:
@@ -50,7 +50,7 @@ jobs:
           path: newman/
           if-no-files-found: error
 
-      # 2) PAGES artifact for the next job
+      # Pages artifact for next job
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v3
         with:
