@@ -22,7 +22,7 @@ jobs:
 
       - name: Run Postman collection
         run: |
-          newman run "postman/PostmanAPIFundamentasExpert.postman_collection.json" \
+          newman run "postman/Postman Library API V2.postman_collection.json" \
             --reporters cli,junit \
             --reporter-junit-export "newman-results.xml"
 
