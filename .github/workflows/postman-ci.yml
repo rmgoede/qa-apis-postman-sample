@@ -19,8 +19,6 @@ permissions:
 jobs:
   newman:
     runs-on: ubuntu-latest
-    outputs:
-      pages_path: ${{ steps.pack.outputs.path }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -39,35 +37,32 @@ jobs:
         run: |
           mkdir -p newman
           newman run "postman/Postman Library API V2.postman_collection.json" \
+            --env-var baseUrl=https://postman-library-api.glitch.me \
             --reporters cli,htmlextra,junit \
             --reporter-htmlextra-export "newman/report.html" \
             --reporter-junit-export "newman/results.xml"
 
-      - name: Upload report artifacts
+      # 1) normal downloadable artifact (zip with report.html + results.xml)
+      - name: Upload CI artifacts
         uses: actions/upload-artifact@v4
         with:
           name: newman-report
           path: newman/
           if-no-files-found: error
 
-      - name: Prepare Pages artifact
-        id: pack
-        run: |
-          echo "path=newman" >> "$GITHUB_OUTPUT"
+      # 2) PAGES artifact for the next job
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: newman
 
   deploy-pages:
     needs: newman
-    if: ${{ success() }}    # only publish if tests passed
     runs-on: ubuntu-latest
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
     steps:
-      - name: Upload to Pages
-        uses: actions/upload-pages-artifact@v3
-        with:
-          path: newman
-
-      - name: Deploy
+      - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v4
