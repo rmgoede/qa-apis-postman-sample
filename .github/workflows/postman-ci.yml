@@ -27,6 +27,7 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: "20"
+          cache: npm
 
       - name: Install newman + html reporter
         run: |
@@ -44,6 +45,7 @@ jobs:
 
       # Downloadable CI artifact (HTML + JUnit)
       - name: Upload CI artifacts
+        if: ${{ always() }}
         uses: actions/upload-artifact@v4
         with:
           name: newman-report
@@ -58,6 +60,7 @@ jobs:
 
   deploy-pages:
     needs: newman
+    if: ${{ success() }}
     runs-on: ubuntu-latest
     environment:
       name: github-pages
