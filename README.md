@@ -1,6 +1,46 @@
-# qa-apis-postman-sample
-Sample repository for Postman
+# qa-apis-postman-sample  
 
-[![Postman Tests](https://github.com/rmgoede/qa-apis-postman-sample/actions/workflows/postman-ci.yml/badge.svg?branch=main)](https://github.com/rmgoede/qa-apis-postman-sample/actions/workflows/postman-ci.yml)
+Sample repository for demonstrating how to run **Postman Collections** with **Newman** in a CI/CD pipeline using **GitHub Actions**.  
 
-**Latest HTML report:** https://rmgoede.github.io/qa-apis-postman-sample/report.html
+[![Postman Tests](https://github.com/rmgoede/qa-apis-postman-sample/actions/workflows/postman-ci.yml/badge.svg)](https://github.com/rmgoede/qa-apis-postman-sample/actions/workflows/postman-ci.yml)
+
+---
+
+## 📖 Overview
+This repository shows how to:  
+- Store and version Postman collections in GitHub.  
+- Automatically run API tests via **Newman** on every commit.  
+- Generate HTML & JUnit reports.  
+- Publish the HTML report to **GitHub Pages** for easy sharing.  
+
+---
+
+## 🚀 CI/CD Workflow
+
+The workflow (`.github/workflows/postman-ci.yml`) does the following:  
+
+1. **Trigger:** Runs on every push or pull request to `main` that changes Postman collections or workflow config.  
+2. **Run Tests:**  
+   - Installs Newman + reporters  
+   - Executes the Postman collection with CLI + HTML + JUnit reporters  
+3. **Artifacts:**  
+   - Uploads the `newman` folder as a downloadable build artifact  
+   - Prepares the HTML report for deployment  
+4. **Deployment:**  
+   - Publishes the latest HTML report to GitHub Pages  
+
+---
+
+## 📊 Reports
+
+- **Latest HTML Report:**  
+  👉 [View Report](https://rmgoede.github.io/qa-apis-postman-sample/report.html)  
+
+- **Artifacts (per workflow run):**  
+  - `report.html` (HTML dashboard)  
+  - `results.xml` (JUnit format, CI-friendly)  
+
+---
+
+## 📂 Repository Structure
+
