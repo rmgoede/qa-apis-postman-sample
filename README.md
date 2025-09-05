@@ -12,7 +12,7 @@ Sample repository for demonstrating how to run **Postman Collections** with **Ne
 ## 🔗 Quick Links
 - 📊 [Latest Test Report](https://rmgoede.github.io/qa-apis-postman-sample/report.html)  
 - ⚙️ [Workflow Runs](https://github.com/rmgoede/qa-apis-postman-sample/actions)
-• 📈 **Duration Trend:** https://rmgoede.github.io/qa-apis-postman-sample/trend.html
+- 📈 **Duration Trend:** https://rmgoede.github.io/qa-apis-postman-sample/trend.html
 
 
 ---
