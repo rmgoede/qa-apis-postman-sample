@@ -5,6 +5,8 @@ Sample repository for demonstrating how to run **Postman Collections** with **Ne
 [![API Tests](https://github.com/rmgoede/qa-apis-postman-sample/actions/workflows/postman-ci.yml/badge.svg)](https://github.com/rmgoede/qa-apis-postman-sample/actions/workflows/postman-ci.yml)
 ![pages](https://img.shields.io/badge/pages-deployed-brightgreen)
 
+![Test Duration](https://img.shields.io/endpoint?url=https://rmgoede.github.io/qa-apis-postman-sample/badge.json)
+
 ---
 
 ## 🔗 Quick Links
