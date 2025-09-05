@@ -33,14 +33,42 @@ jobs:
           npm install -g newman
           npm install -g newman-reporter-htmlextra
 
-      - name: Run Postman collection
+      - name: Run Postman collection (time it) & create badge
         run: |
           mkdir -p newman
-          newman run "postman/Postman Library API V2.postman_collection.json" \
-            --env-var baseUrl=https://library-api.postmanlabs.com \
-            --reporters cli,htmlextra,junit \
-            --reporter-htmlextra-export "newman/report.html" \
-            --reporter-junit-export "newman/results.xml"
+          start_ts=$(date +%s)
+
+          # Run newman and capture pass/fail without stopping the job yet
+          if newman run "postman/Postman Library API V2.postman_collection.json" \
+              --env-var baseUrl=https://library-api.postmanlabs.com \
+              --reporters cli,htmlextra,junit \
+              --reporter-htmlextra-export "newman/report.html" \
+              --reporter-junit-export "newman/results.xml"; then
+            status="passed"
+            color="brightgreen"
+            exit_code=0
+          else
+            status="failed"
+            color="red"
+            exit_code=1
+          fi
+
+          end_ts=$(date +%s)
+          duration=$(( end_ts - start_ts ))
+
+          # Shields.io endpoint JSON for the duration badge
+          printf '{"schemaVersion":1,"label":"test duration","message":"%ss (%s)","color":"%s"}' "$duration" "$status" "$color" > newman/badge.json
+
+          # If you want the job to still fail when tests fail, exit with the captured code
+          exit $exit_code
+          
+      - name: Add report link to job summary
+        if: ${{ always() }}
+        run: |
+          echo "## Newman Report" >> $GITHUB_STEP_SUMMARY
+          echo "- HTML: https://rmgoede.github.io/qa-apis-postman-sample/report.html" >> $GITHUB_STEP_SUMMARY
+          echo "- Duration badge JSON: https://rmgoede.github.io/qa-apis-postman-sample/badge.json" >> $GITHUB_STEP_SUMMARY
+
 
       # Downloadable CI artifact (HTML + JUnit)
       - name: Upload CI artifacts
