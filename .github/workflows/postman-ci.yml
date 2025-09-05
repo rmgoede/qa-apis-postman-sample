@@ -4,12 +4,12 @@ on:
   push:
     branches: [ "main" ]
     paths:
-      - 'postman/**'
-      - '.github/workflows/postman-ci.yml'
+      - "postman/**"
+      - ".github/workflows/postman-ci.yml"
   pull_request:
     paths:
-      - 'postman/**'
-      - '.github/workflows/postman-ci.yml'
+      - "postman/**"
+      - ".github/workflows/postman-ci.yml"
 
 permissions:
   contents: read
@@ -19,6 +19,8 @@ permissions:
 jobs:
   newman:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -38,7 +40,6 @@ jobs:
           mkdir -p newman
           start_ts=$(date +%s)
 
-          # Run newman and capture pass/fail without stopping the job yet
           if newman run "postman/Postman Library API V2.postman_collection.json" \
               --env-var baseUrl=https://library-api.postmanlabs.com \
               --reporters cli,htmlextra,junit \
@@ -56,21 +57,122 @@ jobs:
           end_ts=$(date +%s)
           duration=$(( end_ts - start_ts ))
 
-          # Shields.io endpoint JSON for the duration badge
+          # badge.json for shields.io
           printf '{"schemaVersion":1,"label":"test duration","message":"%ss (%s)","color":"%s"}' "$duration" "$status" "$color" > newman/badge.json
 
-          # If you want the job to still fail when tests fail, exit with the captured code
+          # export for later steps
+          echo "STATUS=$status" >> "$GITHUB_ENV"
+          echo "DURATION=$duration" >> "$GITHUB_ENV"
+
           exit $exit_code
-          
+
       - name: Add report link to job summary
         if: ${{ always() }}
         run: |
-          echo "## Newman Report" >> $GITHUB_STEP_SUMMARY
-          echo "- HTML: https://rmgoede.github.io/qa-apis-postman-sample/report.html" >> $GITHUB_STEP_SUMMARY
-          echo "- Duration badge JSON: https://rmgoede.github.io/qa-apis-postman-sample/badge.json" >> $GITHUB_STEP_SUMMARY
+          echo "## Newman Report" >> "$GITHUB_STEP_SUMMARY"
+          echo "- HTML: https://rmgoede.github.io/qa-apis-postman-sample/report.html" >> "$GITHUB_STEP_SUMMARY"
+          echo "- Duration badge JSON: https://rmgoede.github.io/qa-apis-postman-sample/badge.json" >> "$GITHUB_STEP_SUMMARY"
 
+      - name: Update history.json (commit to repo) and copy for Pages
+        run: |
+          mkdir -p docs newman
+          if [ ! -f docs/history.json ]; then
+            echo "[]" > docs/history.json
+          fi
 
-      # Downloadable CI artifact (HTML + JUnit)
+          node - <<'NODE'
+          const fs = require('fs');
+          const path = 'docs/history.json';
+          const duration = Number(process.env.DURATION || 0);
+          const status = process.env.STATUS || 'unknown';
+          const iso = new Date().toISOString();
+          let arr = [];
+          try { arr = JSON.parse(fs.readFileSync(path, 'utf8')); } catch {}
+          arr.push({ ts: iso, duration, status });
+          fs.writeFileSync(path, JSON.stringify(arr, null, 2));
+          NODE
+
+          git config user.name "github-actions"
+          git config user.email "github-actions@github.com"
+          git add docs/history.json
+          git commit -m "chore(ci): append test run to history [skip ci]" || echo "No changes to commit"
+          git push
+
+          cp docs/history.json newman/history.json
+
+      - name: Generate trend.html (Chart.js)
+        run: |
+          cat > newman/trend.html <<'HTML'
+          <!doctype html>
+          <html>
+          <head>
+            <meta charset="utf-8">
+            <title>API Test Duration Trend</title>
+            <meta name="viewport" content="width=device-width,initial-scale=1" />
+            <style>
+              body { font-family: system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif; margin: 24px; }
+              h1 { margin-bottom: 6px; }
+              .muted { color: #666; margin-top: 0; }
+              #wrap { max-width: 920px; }
+              canvas { width: 100%; height: 420px; }
+              .legend { margin-top: 10px; font-size: 14px; color: #555; }
+              a { color: #0969da; text-decoration: none; }
+            </style>
+            <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+          </head>
+          <body>
+          <div id="wrap">
+            <h1>API Test Duration Trend</h1>
+            <p class="muted">Data source: <code>history.json</code> (one entry per workflow run). Shows seconds and pass/fail.</p>
+            <canvas id="chart"></canvas>
+            <div class="legend">
+              <p>
+                • <a href="./report.html">Latest HTML Report</a> |
+                <a href="./history.json">history.json</a> |
+                <a href="./badge.json">badge.json</a>
+              </p>
+            </div>
+          </div>
+          <script>
+            async function main(){
+              const res = await fetch('history.json', {cache: 'no-cache'});
+              const data = await res.json();
+              data.sort((a,b)=> new Date(a.ts) - new Date(b.ts));
+              const labels = data.map(d => new Date(d.ts).toLocaleString());
+              const durations = data.map(d => Number(d.duration||0));
+              const pointColors = data.map(d => d.status === 'passed' ? '#2da44e' : '#d1242f');
+              new Chart(document.getElementById('chart'), {
+                type: 'line',
+                data: {
+                  labels,
+                  datasets: [{
+                    label: 'Duration (seconds)',
+                    data: durations,
+                    borderWidth: 2,
+                    tension: 0.2,
+                    pointRadius: 4,
+                    pointBackgroundColor: pointColors
+                  }]
+                },
+                options: {
+                  responsive: true,
+                  scales: { y: { title: { display: true, text: 'Seconds' }, beginAtZero: true } },
+                  plugins: {
+                    legend: { display: true },
+                    tooltip: { callbacks: { afterBody(items) {
+                      const i = items[0].dataIndex;
+                      return 'Status: ' + (data[i].status || 'unknown');
+                    }}}
+                  }
+                }
+              });
+            }
+            main();
+          </script>
+          </body>
+          </html>
+          HTML
+
       - name: Upload CI artifacts
         if: ${{ always() }}
         uses: actions/upload-artifact@v4
@@ -80,7 +182,6 @@ jobs:
           if-no-files-found: ignore
           retention-days: 7
 
-      # Pages artifact for next job
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v3
         with:
@@ -88,7 +189,7 @@ jobs:
 
   deploy-pages:
     needs: newman
-    if: ${{ success() }}
+    if: ${{ always() }}
     runs-on: ubuntu-latest
     environment:
       name: github-pages
