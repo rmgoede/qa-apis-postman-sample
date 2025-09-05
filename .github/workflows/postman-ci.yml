@@ -20,7 +20,7 @@ jobs:
   newman:
     runs-on: ubuntu-latest
     permissions:
-      contents: write
+      contents: write  # needed to commit docs/history.json
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -40,6 +40,7 @@ jobs:
           mkdir -p newman
           start_ts=$(date +%s)
 
+          # Run newman and capture pass/fail (do NOT exit yet)
           if newman run "postman/Postman Library API V2.postman_collection.json" \
               --env-var baseUrl=https://library-api.postmanlabs.com \
               --reporters cli,htmlextra,junit \
@@ -57,14 +58,13 @@ jobs:
           end_ts=$(date +%s)
           duration=$(( end_ts - start_ts ))
 
-          # badge.json for shields.io
+          # Shields.io endpoint JSON for the duration badge
           printf '{"schemaVersion":1,"label":"test duration","message":"%ss (%s)","color":"%s"}' "$duration" "$status" "$color" > newman/badge.json
 
-          # export for later steps
+          # export status, duration, and intended exit code for later steps
           echo "STATUS=$status" >> "$GITHUB_ENV"
           echo "DURATION=$duration" >> "$GITHUB_ENV"
-
-          exit $exit_code
+          echo "EXIT_CODE=$exit_code" >> "$GITHUB_ENV"
 
       - name: Add report link to job summary
         if: ${{ always() }}
@@ -74,6 +74,7 @@ jobs:
           echo "- Duration badge JSON: https://rmgoede.github.io/qa-apis-postman-sample/badge.json" >> "$GITHUB_STEP_SUMMARY"
 
       - name: Update history.json (commit to repo) and copy for Pages
+        if: ${{ always() }}
         run: |
           mkdir -p docs newman
           if [ ! -f docs/history.json ]; then
@@ -101,6 +102,7 @@ jobs:
           cp docs/history.json newman/history.json
 
       - name: Generate trend.html (Chart.js)
+        if: ${{ always() }}
         run: |
           cat > newman/trend.html <<'HTML'
           <!doctype html>
@@ -183,13 +185,19 @@ jobs:
           retention-days: 7
 
       - name: Upload Pages artifact
+        if: ${{ always() }}
         uses: actions/upload-pages-artifact@v3
         with:
           path: newman
 
+      # Finalize: fail the job if Newman failed (after all uploads)
+      - name: Fail if Newman failed
+        if: ${{ always() }}
+        run: exit ${EXIT_CODE:-0}
+
   deploy-pages:
     needs: newman
-    if: ${{ always() }}
+    if: ${{ always() }}   # publish even when tests fail
     runs-on: ubuntu-latest
     environment:
       name: github-pages
