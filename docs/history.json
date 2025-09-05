@@ -3,5 +3,10 @@
     "ts": "2025-09-05T16:42:40.613Z",
     "duration": 3,
     "status": "passed"
+  },
+  {
+    "ts": "2025-09-05T16:50:17.445Z",
+    "duration": 3,
+    "status": "passed"
   }
 ]
