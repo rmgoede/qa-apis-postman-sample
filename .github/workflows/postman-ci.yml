@@ -20,10 +20,11 @@ jobs:
   newman:
     runs-on: ubuntu-latest
     permissions:
-      contents: write  # needed to commit docs/history.json
+      contents: write  # needed to commit docs/history.json (optional now)
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        # no need for full history in the demo-friendly path
 
       - name: Setup Node
         uses: actions/setup-node@v4
@@ -62,7 +63,7 @@ jobs:
           printf '{"schemaVersion":1,"label":"test duration","message":"%ss (%s)","color":"%s"}' "$duration" "$status" "$color" > newman/badge.json
 
           # export status, duration, and intended exit code for later steps
-          echo "STATUS=$status" >> "$GITHUB_ENV"
+          echo "STATUS=$status"   >> "$GITHUB_ENV"
           echo "DURATION=$duration" >> "$GITHUB_ENV"
           echo "EXIT_CODE=$exit_code" >> "$GITHUB_ENV"
 
@@ -97,7 +98,9 @@ jobs:
           git config user.email "github-actions@github.com"
           git add docs/history.json
           git commit -m "chore(ci): append test run to history [skip ci]" || echo "No changes to commit"
-          git push
+
+          # Demo-friendly: don't fail if remote has advanced (race on main)
+          git push origin main || echo "Non-fast-forward; skipping push"
 
           cp docs/history.json newman/history.json
 
