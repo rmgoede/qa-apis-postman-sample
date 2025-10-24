@@ -10,10 +10,10 @@ Sample repository for demonstrating how to run **Postman Collections** with **Ne
 ---
 
 ## 🔗 Quick Links
-- 📊 [Latest Test Report](https://rmgoede.github.io/qa-apis-postman-sample/report.html)  
-- ⚙️ [Workflow Runs](https://github.com/rmgoede/qa-apis-postman-sample/actions)
-- 📈 **Duration Trend:** https://rmgoede.github.io/qa-apis-postman-sample/trend.html
-
+- 🧪 **Latest Test Report** — https://rmgoede.github.io/qa-apis-postman-sample/report.html
+- ⚙️ **Workflow Runs** — https://github.com/rmgoede/qa-apis-postman-sample/actions
+- 📈 **Duration Trend** — https://rmgoede.github.io/qa-apis-postman-sample/trend.html
+- 📦 **Collection JSON** — [/postman/Postman Library API V2.postman_collection.json](postman/Postman%20Library%20API%20V2.postman_collection.json)
 
 ---
 
@@ -57,6 +57,15 @@ jobs:
       - uses: actions/checkout@v4
       - name: Run Newman tests
         run: newman run postman/Postman\ Library\ API\ V2.postman_collection.json
+```
+### ▶️ Run Locally (optional)
+```bash
+# Install Newman
+npm install -g newman newman-reporter-htmlextra
+
+# Run the collection with HTML report
+newman run "postman/Postman Library API V2.postman_collection.json" \
+  -r htmlextra --reporter-htmlextra-export ./local-report.html
 ```
 ---
 
