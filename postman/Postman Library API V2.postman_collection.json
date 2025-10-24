@@ -263,7 +263,7 @@
 		"apikey": [
 			{
 				"key": "value",
-				"value": "postmanrulz",
+				"value": "{{PUBLIC_API_KEY}}",
 				"type": "string"
 			},
 			{
